@@ -1,3 +1,4 @@
+package com.hotel;
 public class Person {
     String name;
     Address address;
