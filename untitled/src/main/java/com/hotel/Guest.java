@@ -1,3 +1,4 @@
+package com.hotel;
 public class Guest extends Person {
     int totalRoomsCheckedin;
 
