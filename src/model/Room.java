@@ -1,16 +1,19 @@
+
+package model;
 import java.util.List;
 
 public class Room {
+
     private int roomNumber;
-    private String roomStyle;   // keep simple (can later change to enum)
-    private boolean isAvailable;
+    private String roomStyle;
+    private boolean available;
     private List<String> amenities;
 
     public Room(int roomNumber, String roomStyle, List<String> amenities) {
         this.roomNumber = roomNumber;
         this.roomStyle = roomStyle;
         this.amenities = amenities;
-        this.isAvailable = true;
+        this.available = true;
     }
 
     public int getRoomNumber() {
@@ -22,18 +25,17 @@ public class Room {
     }
 
     public boolean isAvailable() {
-        return isAvailable;
+        return available;
     }
 
     public void setAvailability(boolean available) {
-        this.isAvailable = available;
+        this.available = available;
     }
 
     public List<String> getAmenities() {
         return amenities;
     }
 
-    @Override
     public String toString() {
         return "Room " + roomNumber + " (" + roomStyle + ")";
     }

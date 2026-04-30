@@ -1,7 +1,10 @@
+package model;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Hotel {
+
     private String name;
     private HotelLocation location;
     private List<Room> rooms;
@@ -18,16 +21,6 @@ public class Hotel {
 
     public List<Room> getAllRooms() {
         return rooms;
-    }
-
-    public List<Room> getAvailableRooms() {
-        List<Room> availableRooms = new ArrayList<>();
-        for (Room room : rooms) {
-            if (room.isAvailable()) {
-                availableRooms.add(room);
-            }
-        }
-        return availableRooms;
     }
 
     public String getName() {

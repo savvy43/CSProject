@@ -1,6 +1,8 @@
+package model;
 public class HouseKeeping {
+
     private Room room;
-    private String status; // e.g., "Clean", "Dirty", "In Progress"
+    private String status;
 
     public HouseKeeping(Room room, String status) {
         this.room = room;

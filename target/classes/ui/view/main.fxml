@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ui.controller.MainController"
+            prefWidth="1000" prefHeight="700"
+            styleClass="root">
+
+    <!-- Top Bar -->
+    <top>
+        <VBox styleClass="header">
+            <Label text="HOTEL MANAGEMENT SYSTEM" styleClass="header-title"/>
+            <Label fx:id="hotelInfoLabel" text="Grand Hotel - Tashkent" styleClass="header-subtitle"/>
+            <Label fx:id="cashBalanceLabel" text="Cash Balance: $1000.00" styleClass="header-subtitle"/>
+        </VBox>
+    </top>
+
+    <!-- Left Menu -->
+    <left>
+        <VBox spacing="10" styleClass="menu">
+            <padding>
+                <Insets top="20" right="15" bottom="20" left="15"/>
+            </padding>
+            
+            <Label text="MENU" styleClass="menu-title"/>
+            <Separator/>
+            
+            <Button text="📋 Room Management" onAction="#showRoomManagement" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="🛏️ Book Room" onAction="#showBooking" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="🚪 Leave Hotel" onAction="#showLeaveHotel" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="💳 Checkout  Payment" onAction="#showCheckout" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="🧹 Housekeeping" onAction="#showHousekeeping" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="📊 View Invoices" onAction="#showInvoices" styleClass="menu-btn" maxWidth="Infinity"/>
+            
+            <Separator/>
+            <Button text="❌ Exit" onAction="#handleExit" styleClass="exit-btn" maxWidth="Infinity"/>
+        </VBox>
+    </left>
+
+    <!-- Center Content Area -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+        </StackPane>
+    </center>
+
+</BorderPane>

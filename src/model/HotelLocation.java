@@ -1,4 +1,7 @@
+
+package model;
 public class HotelLocation {
+
     private String city;
     private String address;
 
@@ -15,7 +18,6 @@ public class HotelLocation {
         return address;
     }
 
-    @Override
     public String toString() {
         return city + ", " + address;
     }

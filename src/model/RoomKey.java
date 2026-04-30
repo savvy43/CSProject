@@ -1,24 +1,27 @@
+package model;
+
 public class RoomKey {
+
     private int keyNumber;
     private Room room;
-    private boolean isActive;
+    private boolean active;
 
     public RoomKey(int keyNumber, Room room) {
         this.keyNumber = keyNumber;
         this.room = room;
-        this.isActive = true;
+        this.active = true;
     }
 
-    public void deactivateKey() {
-        isActive = false;
+    public void deactivate() {
+        active = false;
     }
 
-    public void activateKey() {
-        isActive = true;
+    public void activate() {
+        active = true;
     }
 
     public boolean isActive() {
-        return isActive;
+        return active;
     }
 
     public Room getRoom() {
