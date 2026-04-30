@@ -13,9 +13,9 @@
     <!-- Top Bar -->
     <top>
         <VBox styleClass="header">
-            <Label text="HOTEL MANAGEMENT SYSTEM" styleClass="header-title"/>
+            <Label text="🏨 LUXURY HOTEL MANAGEMENT SYSTEM" styleClass="header-title"/>
             <Label fx:id="hotelInfoLabel" text="Grand Hotel - Tashkent" styleClass="header-subtitle"/>
-            <Label fx:id="cashBalanceLabel" text="Cash Balance: $1000.00" styleClass="header-subtitle"/>
+            <Label fx:id="cashBalanceLabel" text="💰 Cash Balance: $1000.00" styleClass="header-subtitle"/>
         </VBox>
     </top>
 
@@ -26,18 +26,20 @@
                 <Insets top="20" right="15" bottom="20" left="15"/>
             </padding>
             
-            <Label text="MENU" styleClass="menu-title"/>
+            <Label text="⭐ MAIN MENU" styleClass="menu-title"/>
             <Separator/>
             
-            <Button text="📋 Room Management" onAction="#showRoomManagement" styleClass="menu-btn" maxWidth="Infinity"/>
-            <Button text="🛏️ Book Room" onAction="#showBooking" styleClass="menu-btn" maxWidth="Infinity"/>
-            <Button text="🚪 Leave Hotel" onAction="#showLeaveHotel" styleClass="menu-btn" maxWidth="Infinity"/>
-            <Button text="💳 Checkout  Payment" onAction="#showCheckout" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="📊 Dashboard" onAction="#showDashboard" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="🏨 Room Management" onAction="#showRoomManagement" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="🔍 Search & Filter" onAction="#showSearch" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="➕ Book Room" onAction="#showBooking" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="🚪 Guest Departure" onAction="#showLeaveHotel" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="💰 Checkout & Payment" onAction="#showCheckout" styleClass="menu-btn" maxWidth="Infinity"/>
             <Button text="🧹 Housekeeping" onAction="#showHousekeeping" styleClass="menu-btn" maxWidth="Infinity"/>
-            <Button text="📊 View Invoices" onAction="#showInvoices" styleClass="menu-btn" maxWidth="Infinity"/>
+            <Button text="📈 Reports & Analytics" onAction="#showReports" styleClass="menu-btn" maxWidth="Infinity"/>
             
             <Separator/>
-            <Button text="❌ Exit" onAction="#handleExit" styleClass="exit-btn" maxWidth="Infinity"/>
+            <Button text="❌ Exit System" onAction="#handleExit" styleClass="exit-btn" maxWidth="Infinity"/>
         </VBox>
     </left>
 

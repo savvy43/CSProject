@@ -58,7 +58,7 @@ public class MainController {
                                        service.getHotel().getLocation().toString());
             }
             updateCashBalanceDisplay();
-            showRoomManagement();
+            showDashboard(); // Start with dashboard instead of room management
         } catch (Exception ex) {
             showAlert("Initialization Error", "Failed to initialize application: " + ex.getMessage(), Alert.AlertType.ERROR);
         }
@@ -120,6 +120,386 @@ public class MainController {
             dbService.saveRoomStatus(room, room.isAvailable(), guestName, cleaningStatus);
         } catch (Exception ex) {
             System.err.println("Error saving room to DB: " + ex.getMessage());
+        }
+    }
+
+    @FXML
+    public void showDashboard() {
+        try {
+            VBox panel = new VBox(20);
+            panel.getStyleClass().add("panel");
+
+            Label title = new Label("📊 Dashboard Overview");
+            title.getStyleClass().add("panel-title");
+
+            // Statistics Cards
+            GridPane statsGrid = new GridPane();
+            statsGrid.setHgap(20);
+            statsGrid.setVgap(20);
+
+            // Total Rooms
+            VBox totalRoomsCard = createStatCard("🏨", 
+                String.valueOf(service.getHotel().getAllRooms().size()), 
+                "Total Rooms");
+            
+            // Available Rooms
+            long availableCount = service.getHotel().getAllRooms().stream()
+                .filter(Room::isAvailable).count();
+            VBox availableCard = createStatCard("✅", 
+                String.valueOf(availableCount), 
+                "Available Rooms");
+            
+            // Occupied Rooms
+            long occupiedCount = service.getHotel().getAllRooms().stream()
+                .filter(r -> !r.isAvailable()).count();
+            VBox occupiedCard = createStatCard("🛏️", 
+                String.valueOf(occupiedCount), 
+                "Occupied Rooms");
+            
+            // Total Revenue
+            VBox revenueCard = createStatCard("💰", 
+                "$" + String.format("%.2f", getTotalRevenue()), 
+                "Total Revenue");
+
+            statsGrid.add(totalRoomsCard, 0, 0);
+            statsGrid.add(availableCard, 1, 0);
+            statsGrid.add(occupiedCard, 0, 1);
+            statsGrid.add(revenueCard, 1, 1);
+
+            // Occupancy Rate Chart
+            Label occupancyTitle = new Label("📈 Occupancy Rate");
+            occupancyTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+            
+            double occupancyRate = (occupiedCount * 100.0) / service.getHotel().getAllRooms().size();
+            ProgressBar occupancyBar = new ProgressBar(occupancyRate / 100.0);
+            occupancyBar.setPrefWidth(400);
+            occupancyBar.setPrefHeight(30);
+            occupancyBar.setStyle("-fx-accent: linear-gradient(90deg, #667eea 0%, #764ba2 100%);");
+            
+            Label occupancyLabel = new Label(String.format("%.1f%% Occupied", occupancyRate));
+            occupancyLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+            // Cleaning Status Overview
+            Label cleaningTitle = new Label("🧹 Cleaning Status");
+            cleaningTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+            
+            long cleanCount = houseKeepingList.stream()
+                .filter(hk -> "Clean".equals(hk.getStatus())).count();
+            long dirtyCount = houseKeepingList.stream()
+                .filter(hk -> "Dirty".equals(hk.getStatus())).count();
+            
+            HBox cleaningStats = new HBox(30);
+            Label cleanLabel = new Label("Clean: " + cleanCount);
+            cleanLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #11998e;");
+            Label dirtyLabel = new Label("Dirty: " + dirtyCount);
+            dirtyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #ff6b6b;");
+            cleaningStats.getChildren().addAll(cleanLabel, dirtyLabel);
+
+            // Quick Actions
+            Label actionsTitle = new Label("⚡ Quick Actions");
+            actionsTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+            
+            HBox quickActions = new HBox(15);
+            Button bookBtn = new Button("➕ New Booking");
+            bookBtn.getStyleClass().add("btn-success");
+            bookBtn.setOnAction(e -> showBooking());
+            
+            Button checkoutBtn = new Button("💰 Checkout");
+            checkoutBtn.getStyleClass().add("btn-primary");
+            checkoutBtn.setOnAction(e -> showCheckout());
+            
+            Button cleanBtn = new Button("🧹 Housekeeping");
+            cleanBtn.getStyleClass().add("btn-warning");
+            cleanBtn.setOnAction(e -> showHousekeeping());
+            
+            quickActions.getChildren().addAll(bookBtn, checkoutBtn, cleanBtn);
+
+            panel.getChildren().addAll(
+                title, 
+                statsGrid, 
+                new Separator(),
+                occupancyTitle, 
+                occupancyBar, 
+                occupancyLabel,
+                new Separator(),
+                cleaningTitle,
+                cleaningStats,
+                new Separator(),
+                actionsTitle,
+                quickActions
+            );
+            
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(panel);
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to load dashboard: " + ex.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    private VBox createStatCard(String icon, String value, String label) {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("stat-card");
+        card.setAlignment(Pos.CENTER);
+        card.setPrefWidth(180);
+        card.setPrefHeight(120);
+
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle("-fx-font-size: 32px;");
+        
+        Label valueLabel = new Label(value);
+        valueLabel.getStyleClass().add("stat-value");
+        
+        Label descLabel = new Label(label);
+        descLabel.getStyleClass().add("stat-label");
+
+        card.getChildren().addAll(iconLabel, valueLabel, descLabel);
+        return card;
+    }
+
+    @FXML
+    public void showSearch() {
+        try {
+            VBox panel = new VBox(20);
+            panel.getStyleClass().add("panel");
+            panel.setMaxWidth(700);
+
+            Label title = new Label("🔍 Search & Filter Rooms");
+            title.getStyleClass().add("panel-title");
+
+            // Search by room number
+            Label searchLabel = new Label("Search by Room Number:");
+            TextField searchField = new TextField();
+            searchField.setPromptText("Enter room number (e.g., 101)");
+
+            // Filter by room style
+            Label styleLabel = new Label("Filter by Room Style:");
+            ComboBox<String> styleCombo = new ComboBox<>();
+            styleCombo.getItems().addAll("All", "Single", "Double", "Suite");
+            styleCombo.setValue("All");
+            styleCombo.setPrefWidth(200);
+
+            // Filter by availability
+            Label availLabel = new Label("Filter by Availability:");
+            ComboBox<String> availCombo = new ComboBox<>();
+            availCombo.getItems().addAll("All", "Available", "Occupied");
+            availCombo.setValue("All");
+            availCombo.setPrefWidth(200);
+
+            // Results table
+            TableView<Room> resultsTable = new TableView<>();
+            resultsTable.setPrefHeight(300);
+
+            TableColumn<Room, Integer> numCol = new TableColumn<>("Room #");
+            numCol.setCellValueFactory(data -> 
+                new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getRoomNumber()));
+            numCol.setPrefWidth(100);
+
+            TableColumn<Room, String> styleCol = new TableColumn<>("Style");
+            styleCol.setCellValueFactory(data -> 
+                new javafx.beans.property.SimpleStringProperty(data.getValue().getRoomStyle()));
+            styleCol.setPrefWidth(120);
+
+            TableColumn<Room, String> statusCol = new TableColumn<>("Status");
+            statusCol.setCellValueFactory(data -> 
+                new javafx.beans.property.SimpleStringProperty(
+                    data.getValue().isAvailable() ? "Available" : "Occupied"));
+            statusCol.setPrefWidth(120);
+
+            TableColumn<Room, String> amenitiesCol = new TableColumn<>("Amenities");
+            amenitiesCol.setCellValueFactory(data -> 
+                new javafx.beans.property.SimpleStringProperty(
+                    String.join(", ", data.getValue().getAmenities())));
+            amenitiesCol.setPrefWidth(250);
+
+            resultsTable.getColumns().addAll(numCol, styleCol, statusCol, amenitiesCol);
+
+            // Search button
+            Button searchBtn = new Button("🔍 Search");
+            searchBtn.getStyleClass().add("btn-primary");
+            searchBtn.setOnAction(e -> {
+                try {
+                    List<Room> filtered = service.getHotel().getAllRooms().stream()
+                        .filter(room -> {
+                            // Filter by room number
+                            String searchText = searchField.getText().trim();
+                            if (!searchText.isEmpty()) {
+                                try {
+                                    int searchNum = Integer.parseInt(searchText);
+                                    if (room.getRoomNumber() != searchNum) return false;
+                                } catch (NumberFormatException ex) {
+                                    return false;
+                                }
+                            }
+                            
+                            // Filter by style
+                            String style = styleCombo.getValue();
+                            if (!"All".equals(style) && !room.getRoomStyle().equals(style)) {
+                                return false;
+                            }
+                            
+                            // Filter by availability
+                            String avail = availCombo.getValue();
+                            if ("Available".equals(avail) && !room.isAvailable()) return false;
+                            if ("Occupied".equals(avail) && room.isAvailable()) return false;
+                            
+                            return true;
+                        })
+                        .collect(java.util.stream.Collectors.toList());
+                    
+                    resultsTable.setItems(FXCollections.observableArrayList(filtered));
+                    
+                    if (filtered.isEmpty()) {
+                        showAlert("No Results", "No rooms match your search criteria", Alert.AlertType.INFORMATION);
+                    }
+                } catch (Exception ex) {
+                    showAlert("Error", "Search failed: " + ex.getMessage(), Alert.AlertType.ERROR);
+                }
+            });
+
+            Button clearBtn = new Button("🔄 Clear Filters");
+            clearBtn.getStyleClass().add("btn-warning");
+            clearBtn.setOnAction(e -> {
+                searchField.clear();
+                styleCombo.setValue("All");
+                availCombo.setValue("All");
+                resultsTable.setItems(FXCollections.observableArrayList(service.getHotel().getAllRooms()));
+            });
+
+            HBox buttonBox = new HBox(15, searchBtn, clearBtn);
+
+            GridPane filterGrid = new GridPane();
+            filterGrid.setHgap(15);
+            filterGrid.setVgap(15);
+            filterGrid.add(searchLabel, 0, 0);
+            filterGrid.add(searchField, 1, 0);
+            filterGrid.add(styleLabel, 0, 1);
+            filterGrid.add(styleCombo, 1, 1);
+            filterGrid.add(availLabel, 0, 2);
+            filterGrid.add(availCombo, 1, 2);
+
+            // Initial load - show all rooms
+            resultsTable.setItems(FXCollections.observableArrayList(service.getHotel().getAllRooms()));
+
+            panel.getChildren().addAll(title, filterGrid, buttonBox, resultsTable);
+            panel.setAlignment(Pos.TOP_CENTER);
+            
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(panel);
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to load search: " + ex.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    public void showReports() {
+        try {
+            VBox panel = new VBox(20);
+            panel.getStyleClass().add("panel");
+
+            Label title = new Label("📈 Reports & Analytics");
+            title.getStyleClass().add("panel-title");
+
+            // Revenue Report
+            Label revenueTitle = new Label("💰 Revenue Report");
+            revenueTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+            GridPane revenueGrid = new GridPane();
+            revenueGrid.setHgap(20);
+            revenueGrid.setVgap(10);
+            revenueGrid.setStyle("-fx-padding: 15; -fx-background-color: rgba(102,126,234,0.1); -fx-background-radius: 10;");
+
+            Label totalInvoicesLabel = new Label("Total Invoices:");
+            totalInvoicesLabel.setStyle("-fx-font-size: 16px;");
+            Label totalInvoicesValue = new Label(String.valueOf(completedInvoices.size()));
+            totalInvoicesValue.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+            Label totalRevenueLabel = new Label("Total Revenue:");
+            totalRevenueLabel.setStyle("-fx-font-size: 16px;");
+            Label totalRevenueValue = new Label("$" + String.format("%.2f", getTotalRevenue()));
+            totalRevenueValue.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #11998e;");
+
+            Label avgInvoiceLabel = new Label("Average Invoice:");
+            avgInvoiceLabel.setStyle("-fx-font-size: 16px;");
+            double avgInvoice = completedInvoices.isEmpty() ? 0 : getTotalRevenue() / completedInvoices.size();
+            Label avgInvoiceValue = new Label("$" + String.format("%.2f", avgInvoice));
+            avgInvoiceValue.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+            revenueGrid.add(totalInvoicesLabel, 0, 0);
+            revenueGrid.add(totalInvoicesValue, 1, 0);
+            revenueGrid.add(totalRevenueLabel, 0, 1);
+            revenueGrid.add(totalRevenueValue, 1, 1);
+            revenueGrid.add(avgInvoiceLabel, 0, 2);
+            revenueGrid.add(avgInvoiceValue, 1, 2);
+
+            // Room Statistics
+            Label roomStatsTitle = new Label("🏨 Room Statistics");
+            roomStatsTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+            GridPane roomStatsGrid = new GridPane();
+            roomStatsGrid.setHgap(20);
+            roomStatsGrid.setVgap(10);
+            roomStatsGrid.setStyle("-fx-padding: 15; -fx-background-color: rgba(102,126,234,0.1); -fx-background-radius: 10;");
+
+            long singleCount = service.getHotel().getAllRooms().stream()
+                .filter(r -> "Single".equals(r.getRoomStyle())).count();
+            long doubleCount = service.getHotel().getAllRooms().stream()
+                .filter(r -> "Double".equals(r.getRoomStyle())).count();
+            long suiteCount = service.getHotel().getAllRooms().stream()
+                .filter(r -> "Suite".equals(r.getRoomStyle())).count();
+
+            roomStatsGrid.add(new Label("Single Rooms:"), 0, 0);
+            roomStatsGrid.add(new Label(String.valueOf(singleCount)), 1, 0);
+            roomStatsGrid.add(new Label("Double Rooms:"), 0, 1);
+            roomStatsGrid.add(new Label(String.valueOf(doubleCount)), 1, 1);
+            roomStatsGrid.add(new Label("Suite Rooms:"), 0, 2);
+            roomStatsGrid.add(new Label(String.valueOf(suiteCount)), 1, 2);
+
+            // Occupancy Report
+            Label occupancyTitle = new Label("📊 Occupancy Report");
+            occupancyTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+            long occupied = service.getHotel().getAllRooms().stream()
+                .filter(r -> !r.isAvailable()).count();
+            long available = service.getHotel().getAllRooms().stream()
+                .filter(Room::isAvailable).count();
+            double occupancyRate = (occupied * 100.0) / service.getHotel().getAllRooms().size();
+
+            GridPane occupancyGrid = new GridPane();
+            occupancyGrid.setHgap(20);
+            occupancyGrid.setVgap(10);
+            occupancyGrid.setStyle("-fx-padding: 15; -fx-background-color: rgba(102,126,234,0.1); -fx-background-radius: 10;");
+
+            occupancyGrid.add(new Label("Occupied Rooms:"), 0, 0);
+            occupancyGrid.add(new Label(String.valueOf(occupied)), 1, 0);
+            occupancyGrid.add(new Label("Available Rooms:"), 0, 1);
+            occupancyGrid.add(new Label(String.valueOf(available)), 1, 1);
+            occupancyGrid.add(new Label("Occupancy Rate:"), 0, 2);
+            Label occupancyRateLabel = new Label(String.format("%.1f%%", occupancyRate));
+            occupancyRateLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #667eea;");
+            occupancyGrid.add(occupancyRateLabel, 1, 2);
+
+            // Export button
+            Button exportBtn = new Button("📄 Export Report");
+            exportBtn.getStyleClass().add("btn-primary");
+            exportBtn.setOnAction(e -> {
+                showAlert("Export", "Report export feature - Coming Soon!\nWould save to PDF or Excel in production.", Alert.AlertType.INFORMATION);
+            });
+
+            panel.getChildren().addAll(
+                title,
+                revenueTitle, revenueGrid,
+                new Separator(),
+                roomStatsTitle, roomStatsGrid,
+                new Separator(),
+                occupancyTitle, occupancyGrid,
+                new Separator(),
+                exportBtn
+            );
+            
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(panel);
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to load reports: " + ex.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
@@ -797,48 +1177,6 @@ public class MainController {
             contentArea.getChildren().add(panel);
         } catch (Exception ex) {
             showAlert("Error", "Failed to load housekeeping management: " + ex.getMessage(), Alert.AlertType.ERROR);
-        }
-    }
-
-    @FXML
-    public void showInvoices() {
-        try {
-            VBox panel = new VBox(15);
-            panel.getStyleClass().add("panel");
-
-            Label title = new Label("Completed Invoices");
-            title.getStyleClass().add("panel-title");
-
-            ListView<String> listView = new ListView<>();
-            listView.setPrefHeight(400);
-
-            ObservableList<String> invoiceStrings = FXCollections.observableArrayList();
-            int invoiceNum = 1;
-            for (Invoice inv : completedInvoices) {
-                try {
-                    invoiceStrings.add("Invoice #" + invoiceNum + " - Total: $" + String.format("%.2f", inv.getTotalAmount()));
-                    invoiceNum++;
-                } catch (Exception ex) {
-                    invoiceStrings.add("Invoice #" + invoiceNum + " - Error loading invoice");
-                    invoiceNum++;
-                }
-            }
-
-            if (invoiceStrings.isEmpty()) {
-                invoiceStrings.add("No completed invoices yet");
-            }
-
-            listView.setItems(invoiceStrings);
-
-            double totalRevenue = getTotalRevenue();
-            Label totalLabel = new Label("Total Revenue: $" + String.format("%.2f", totalRevenue));
-            totalLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
-            panel.getChildren().addAll(title, listView, totalLabel);
-            contentArea.getChildren().clear();
-            contentArea.getChildren().add(panel);
-        } catch (Exception ex) {
-            showAlert("Error", "Failed to load invoices: " + ex.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
